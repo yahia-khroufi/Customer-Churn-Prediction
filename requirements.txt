@@ -1,0 +1,13 @@
+# Python 3.12 - ML, API and notebook dependencies requested for this project.
+# Current project sources have no third-party imports yet.
+pandas==3.0.5
+numpy==2.5.3
+scikit-learn==1.9.1
+matplotlib==3.11.1
+joblib==1.6.0
+xgboost==3.4.1
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.5
+jupyter==1.1.1
+ipykernel==7.3.0
