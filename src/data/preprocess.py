@@ -71,7 +71,7 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
 
 
 def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
- 
+
     cleaned = clean_data(df, training=True)
     X = cleaned[FEATURE_COLUMNS].copy()
     y = cleaned[TARGET_COLUMN].map({"No": 0, "Yes": 1}).astype("int64")
@@ -79,19 +79,20 @@ def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def prepare_prediction_data(df: pd.DataFrame) -> pd.DataFrame:
+
     cleaned = clean_data(df, training=False)
     return cleaned[FEATURE_COLUMNS].copy()
 
 
 def build_preprocessor(scale_numeric: bool = True) -> ColumnTransformer:
- 
+
     numeric_steps = [
         ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
     ]
     if scale_numeric:
         numeric_steps.append(("scaler", StandardScaler()))
 
-    numeric_pipeline = Pipeline(tran)
+    numeric_pipeline = Pipeline(numeric_steps)
     categorical_pipeline = Pipeline([
         ("imputer", SimpleImputer(
             strategy="constant", fill_value="Missing", keep_empty_features=True,
