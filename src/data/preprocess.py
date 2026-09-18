@@ -71,11 +71,7 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
 
 
 def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
-    """Retourne les features du contrat et la cible encodée : No=0, Yes=1.
-
-    L'identifiant est facultatif selon le contrat actuel. S'il est présent,
-    il est exclu de X, comme toutes les colonnes hors FEATURE_COLUMNS.
-    """
+ 
     cleaned = clean_data(df, training=True)
     X = cleaned[FEATURE_COLUMNS].copy()
     y = cleaned[TARGET_COLUMN].map({"No": 0, "Yes": 1}).astype("int64")
@@ -83,17 +79,12 @@ def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def prepare_prediction_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Retourne les mêmes features, sans cible et sans ajuster de transformer."""
     cleaned = clean_data(df, training=False)
     return cleaned[FEATURE_COLUMNS].copy()
 
 
 def build_preprocessor(scale_numeric: bool = True) -> ColumnTransformer:
-    """Crée un ColumnTransformer non ajusté, à entraîner uniquement sur le train.
-
-    SeniorCitizen reste binaire. Les autres catégories sont encodées en One-Hot.
-    Les catégories autorisées mais absentes du train sont ignorées par l'encodeur.
-    """
+ 
     numeric_steps = [
         ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
     ]
