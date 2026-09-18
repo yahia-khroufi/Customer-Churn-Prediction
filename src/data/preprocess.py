@@ -17,14 +17,13 @@ from src.common.data_contract import (
 
 
 def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
-    
+
     if not df.columns.is_unique:
         raise ValueError("Plusieurs colonnes portent le même nom.")
 
-    cleaned = df.copy()
+    cleaned = df.replace(r"^\s*$", pd.NA, regex=True)
     text_columns = cleaned.select_dtypes(include=["object", "string"]).columns
     for column in text_columns:
-
         if pd.api.types.is_string_dtype(cleaned[column].dropna()):
             cleaned[column] = cleaned[column].astype("string").str.strip()
             cleaned[column] = cleaned[column].replace("", pd.NA)
@@ -41,12 +40,25 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
             cleaned.loc[invalid_backup, "OnlineBackup"] = pd.NA
 
     report = validate_data(cleaned, training=training)
+
+
+    if training and TARGET_COLUMN in cleaned.columns:
+        missing_target = int(cleaned[TARGET_COLUMN].isna().sum())
+        if missing_target:
+            report["errors"].append(
+                f"{TARGET_COLUMN} : {missing_target} cible(s) manquante(s). "
+                "Leur traitement doit être décidé avant l'entraînement."
+            )
+    elif not training and TARGET_COLUMN in cleaned.columns:
+        report["errors"].append(
+            f"{TARGET_COLUMN} ne doit pas être fourni pour une prédiction."
+        )
+
     if report["errors"]:
         raise ValueError("Contrat de données non respecté :\n- " + "\n- ".join(report["errors"]))
     for message in report["warnings"]:
         warnings.warn(message, UserWarning, stacklevel=2)
 
-    # NumPy NaN est compatible avec le SimpleImputer par défaut.
     for column in NUMERIC_FEATURES + ["SeniorCitizen"]:
         cleaned[column] = pd.to_numeric(cleaned[column], errors="raise").astype("float64")
 
@@ -59,7 +71,11 @@ def clean_data(df: pd.DataFrame, training: bool = True) -> pd.DataFrame:
 
 
 def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
+    """Retourne les features du contrat et la cible encodée : No=0, Yes=1.
 
+    L'identifiant est facultatif selon le contrat actuel. S'il est présent,
+    il est exclu de X, comme toutes les colonnes hors FEATURE_COLUMNS.
+    """
     cleaned = clean_data(df, training=True)
     X = cleaned[FEATURE_COLUMNS].copy()
     y = cleaned[TARGET_COLUMN].map({"No": 0, "Yes": 1}).astype("int64")
@@ -67,19 +83,24 @@ def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def prepare_prediction_data(df: pd.DataFrame) -> pd.DataFrame:
-   
+    """Retourne les mêmes features, sans cible et sans ajuster de transformer."""
     cleaned = clean_data(df, training=False)
     return cleaned[FEATURE_COLUMNS].copy()
 
 
 def build_preprocessor(scale_numeric: bool = True) -> ColumnTransformer:
+    """Crée un ColumnTransformer non ajusté, à entraîner uniquement sur le train.
+
+    SeniorCitizen reste binaire. Les autres catégories sont encodées en One-Hot.
+    Les catégories autorisées mais absentes du train sont ignorées par l'encodeur.
+    """
     numeric_steps = [
         ("imputer", SimpleImputer(strategy="median", keep_empty_features=True)),
     ]
     if scale_numeric:
         numeric_steps.append(("scaler", StandardScaler()))
 
-    numeric_pipeline = Pipeline(numeric_steps)
+    numeric_pipeline = Pipeline(tran)
     categorical_pipeline = Pipeline([
         ("imputer", SimpleImputer(
             strategy="constant", fill_value="Missing", keep_empty_features=True,
