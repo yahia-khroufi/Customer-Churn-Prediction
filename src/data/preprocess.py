@@ -79,7 +79,6 @@ def prepare_training_data(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.Series]:
 
 
 def prepare_prediction_data(df: pd.DataFrame) -> pd.DataFrame:
-
     cleaned = clean_data(df, training=False)
     return cleaned[FEATURE_COLUMNS].copy()
 
@@ -111,3 +110,5 @@ def build_preprocessor(scale_numeric: bool = True) -> ColumnTransformer:
         ],
         remainder="drop",
     )
+
+    

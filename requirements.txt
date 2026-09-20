@@ -1,5 +1,3 @@
-# Python 3.12 - ML, API and notebook dependencies requested for this project.
-# Current project sources have no third-party imports yet.
 pandas==3.0.5
 numpy==2.5.3
 scikit-learn==1.9.1
