@@ -1,7 +1,8 @@
 """Premier entraînement : référence majoritaire et régression logistique.
 
 Depuis la racine du projet : python -m src.models.train
-Le test est réservé à l'évaluation finale. Aucun modèle n'est sauvegardé ici.
+Le test est réservé à l'évaluation finale, déléguée à evaluate.py depuis le
+point d'entrée du script. Aucun modèle n'est sauvegardé ici.
 """
 
 from pathlib import Path
@@ -14,6 +15,7 @@ from sklearn.pipeline import Pipeline
 
 from src.common.data_contract import ID_COLUMN
 from src.data.preprocess import build_preprocessor, prepare_training_data
+from src.models.evaluate import evaluate_model
 
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
@@ -44,21 +46,15 @@ def train_model(data_path: str | Path = DATA_PATH) -> tuple[Pipeline, pd.DataFra
     print(f"Clients d'entraînement : {len(X_train)}")
     print(f"Clients réservés au test : {len(X_test)}")
 
-    # 4. Référence simple : prédire toujours la classe majoritaire du train.
     baseline = Pipeline([
         ("preprocessor", build_preprocessor(scale_numeric=True)),
         ("classifier", DummyClassifier(strategy="most_frequent")),
     ])
 
-    # 5. Premier modèle : le preprocessing et le classifieur forment un seul objet.
     model = Pipeline([
         ("preprocessor", build_preprocessor(scale_numeric=True)),
         ("classifier", LogisticRegression(max_iter=1000, random_state=RANDOM_STATE)),
     ])
-
-    # 6. Diviser le train en 5 parties : en utiliser 4 pour apprendre et 1 pour
-    # valider, en tournant 5 fois. Chaque partie garde les proportions de classes.
-    # Le preprocessing est réappris dans chaque pli, sans voir sa validation.
     cv = StratifiedKFold(n_splits=CV_FOLDS, shuffle=True, random_state=RANDOM_STATE)
     results = []
     for name, candidate in [("Classe majoritaire", baseline), ("LogisticRegression", model)]:
@@ -70,8 +66,6 @@ def train_model(data_path: str | Path = DATA_PATH) -> tuple[Pipeline, pd.DataFra
             scoring={"accuracy": "accuracy", "roc_auc": "roc_auc"},
             error_score="raise",
         )
-        # Les clés test_* de cross_validate désignent les validations des plis,
-        # et non le jeu X_test réservé plus haut.
         results.append({
             "modele": name,
             "accuracy_cv": scores["test_accuracy"].mean(),
@@ -81,8 +75,6 @@ def train_model(data_path: str | Path = DATA_PATH) -> tuple[Pipeline, pd.DataFra
     print("\nScores moyens de validation croisée sur le train :")
     print(pd.DataFrame(results).round(4).to_string(index=False))
 
-    # 7. Ajuster le Pipeline de régression logistique sur l'ensemble du train.
-    # fit apprend aussi les médianes, les catégories et les paramètres du scaler.
     model.fit(X_train, y_train)
 
     print("\nPipeline entraîné sur le train. Le jeu de test reste réservé.")
@@ -92,3 +84,4 @@ def train_model(data_path: str | Path = DATA_PATH) -> tuple[Pipeline, pd.DataFra
 
 if __name__ == "__main__":
     trained_model, X_test, y_test = train_model()
+    evaluation = evaluate_model(trained_model, X_test, y_test)
