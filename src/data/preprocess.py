@@ -94,7 +94,7 @@ def build_preprocessor(scale_numeric: bool = True) -> ColumnTransformer:
     numeric_pipeline = Pipeline(numeric_steps)
     categorical_pipeline = Pipeline([
         ("imputer", SimpleImputer(
-            strategy="constant", fill_value="Missing", keep_empty_features=True,
+            strategy="most_frequent", keep_empty_features=True,
         )),
         ("encoder", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
     ])

@@ -126,5 +126,4 @@ def test_missing_categories_and_unseen_valid_category_can_be_transformed(valid_d
 
     assert np.isfinite(transformed).all()
     assert transformed.shape[1] == preprocessor.transform(X).shape[1]
-    # Après les trois colonnes numériques, SeniorCitizen reste binaire.
     assert transformed[0, 3] == 0.0

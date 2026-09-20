@@ -1,14 +1,15 @@
 from pathlib import Path
 
 import pandas as pd
-from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+from sklearn.metrics import f1_score, make_scorer, precision_score, recall_score
+from sklearn.model_selection import GridSearchCV, StratifiedKFold, cross_validate, train_test_split
 from sklearn.pipeline import Pipeline
+from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 
-from src.common.data_contract import ID_COLUMN
 from src.data.preprocess import build_preprocessor, prepare_training_data
-from src.models.evaluate import evaluate_model
 from src.utils.logger import get_logger
 
 
@@ -19,6 +20,31 @@ DATA_PATH = PROJECT_ROOT / "data" / "raw" / "churn.csv"
 RANDOM_STATE = 42
 TEST_SIZE = 0.20
 CV_FOLDS = 5
+
+# Les paramètres du classifier sont préfixés par son nom dans le Pipeline.
+# Chaque grille inclut aussi la configuration de départ pour pouvoir la conserver.
+PARAM_GRIDS = {
+    "LogisticRegression": {
+        "classifier__C": [0.01, 0.1, 1.0, 10.0],
+        "classifier__class_weight": [None, "balanced"],
+    },
+    "DecisionTreeClassifier": {
+        "classifier__max_depth": [3, 5, 10, None],
+        "classifier__min_samples_leaf": [1, 5, 10],
+        "classifier__class_weight": [None, "balanced"],
+    },
+    "RandomForestClassifier": {
+        "classifier__n_estimators": [100, 200],
+        "classifier__max_depth": [None, 10],
+        "classifier__min_samples_leaf": [1, 5],
+        "classifier__class_weight": [None, "balanced"],
+    },
+    "XGBClassifier": {
+        "classifier__n_estimators": [100, 200],
+        "classifier__max_depth": [3, 4, 5],
+        "classifier__learning_rate": [0.05, 0.1],
+    },
+}
 
 
 def train_model(
@@ -54,34 +80,41 @@ def train_model(
     logger.info("Clients d'entraînement : %d", len(X_train))
     logger.info("Clients réservés au test : %d", len(X_test))
 
-    baseline = Pipeline([
-        ("preprocessor", build_preprocessor(scale_numeric=True)),
-        ("classifier", DummyClassifier(strategy="most_frequent")),
-    ])
-
-    model = Pipeline([
-        ("preprocessor", build_preprocessor(scale_numeric=True)),
-        (
-            "classifier",
-            LogisticRegression(
-                max_iter=1000,
-                random_state=RANDOM_STATE,
-            ),
+    # Chaque modèle possède son preprocessing, appris dans chaque pli du train.
+    classifiers = {
+        "LogisticRegression": LogisticRegression(max_iter=1000, random_state=RANDOM_STATE),
+        "DecisionTreeClassifier": DecisionTreeClassifier(random_state=RANDOM_STATE),
+        "RandomForestClassifier": RandomForestClassifier(
+            n_estimators=200, random_state=RANDOM_STATE, n_jobs=1,
         ),
-    ])
+        "XGBClassifier": XGBClassifier(
+            n_estimators=200, max_depth=4, learning_rate=0.1,
+            objective="binary:logistic", eval_metric="logloss",
+            random_state=RANDOM_STATE, n_jobs=1,
+        ),
+    }
+    models = {}
+    for name, classifier in classifiers.items():
+        models[name] = Pipeline([
+            ("preprocessor", build_preprocessor(scale_numeric=name == "LogisticRegression")),
+            ("classifier", classifier),
+        ])
 
     cv = StratifiedKFold(
         n_splits=CV_FOLDS,
         shuffle=True,
         random_state=RANDOM_STATE,
     )
+    scoring = {
+        "accuracy": "accuracy",
+        "precision": make_scorer(precision_score, zero_division=0),
+        "recall": make_scorer(recall_score, zero_division=0),
+        "f1": make_scorer(f1_score, zero_division=0),
+    }
 
     results = []
 
-    for name, candidate in [
-        ("Classe majoritaire", baseline),
-        ("LogisticRegression", model),
-    ]:
+    for name, candidate in models.items():
 
         logger.info("Validation croisée du modèle : %s", name)
 
@@ -90,32 +123,75 @@ def train_model(
             X_train,
             y_train,
             cv=cv,
-            scoring={
-                "accuracy": "accuracy",
-                "roc_auc": "roc_auc",
-            },
+            scoring=scoring,
             error_score="raise",
         )
 
         results.append({
             "modele": name,
             "accuracy_cv": scores["test_accuracy"].mean(),
-            "roc_auc_cv": scores["test_roc_auc"].mean(),
+            "precision_cv": scores["test_precision"].mean(),
+            "recall_cv": scores["test_recall"].mean(),
+            "f1_cv": scores["test_f1"].mean(),
+            "f1_std": scores["test_f1"].std(),
         })
 
-    results_df = pd.DataFrame(results).round(4)
+    results_df = pd.DataFrame(results).sort_values(
+        "f1_cv", ascending=False, kind="stable",
+    )
 
     logger.info(
         "Scores moyens de validation croisée :\n%s",
-        results_df.to_string(index=False),
+        results_df.round(4).to_string(index=False),
     )
 
-    logger.info("Entraînement final de LogisticRegression")
+    # Régler les deux meilleurs candidats sur les mêmes plis, sans toucher au test.
+    top_models = results_df.head(2)["modele"].tolist()
+    logger.info("Modèles retenus pour le réglage : %s", ", ".join(top_models))
+    searches = {}
+    tuned_results = []
 
-    model.fit(X_train, y_train)
+    for name in top_models:
+        logger.info("Recherche d'hyperparamètres pour : %s", name)
+        search = GridSearchCV(
+            estimator=models[name],
+            param_grid=PARAM_GRIDS[name],
+            scoring=scoring,
+            refit="f1",
+            cv=cv,
+            n_jobs=1,
+            error_score="raise",
+        )
+        search.fit(X_train, y_train)
+        searches[name] = search
 
-    logger.info("Pipeline entraîné avec succès")
-    logger.info("Le jeu de test reste réservé à l'évaluation finale")
+        # Les quatre métriques correspondent à la configuration gagnante en F1.
+        best_index = search.best_index_
+        tuned_results.append({
+            "modele": name,
+            "accuracy_cv": search.cv_results_["mean_test_accuracy"][best_index],
+            "precision_cv": search.cv_results_["mean_test_precision"][best_index],
+            "recall_cv": search.cv_results_["mean_test_recall"][best_index],
+            "f1_cv": search.cv_results_["mean_test_f1"][best_index],
+            "f1_std": search.cv_results_["std_test_f1"][best_index],
+        })
+        logger.info("Meilleurs paramètres pour %s : %s", name, search.best_params_)
+
+    tuned_df = pd.DataFrame(tuned_results).sort_values(
+        "f1_cv", ascending=False, kind="stable",
+    )
+    logger.info(
+        "Résultats après réglage :\n%s",
+        tuned_df.round(4).to_string(index=False),
+    )
+
+    best_name = tuned_df.iloc[0]["modele"]
+    # refit="f1" a déjà ajusté ce pipeline sur l'ensemble du train.
+    model = searches[best_name].best_estimator_
+    logger.info("Meilleur modèle final selon le F1 moyen en CV : %s", best_name)
+    logger.info("Meilleurs paramètres finaux : %s", searches[best_name].best_params_)
+    logger.info("Le meilleur pipeline a été réentraîné sur tout le train")
+    logger.info("Ces scores servent à la sélection ; l'évaluation finale reste à faire")
     logger.info("Aucun modèle n'a été enregistré à cette étape")
 
     return model, X_test, y_test
@@ -123,5 +199,3 @@ def train_model(
 
 if __name__ == "__main__":
     trained_model, X_test, y_test = train_model()
-
-    

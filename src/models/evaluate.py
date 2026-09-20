@@ -13,8 +13,9 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
+from src.utils.logger import get_logger
 
-
+logger =get_logger(__name__)
 def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
 
     check_is_fitted(model)
@@ -29,15 +30,11 @@ def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> 
     if set(classes) != {0, 1}:
         raise ValueError("Le modèle doit avoir été entraîné avec les classes 0 et 1.")
 
-    # 1. Classes prédites : pour accuracy, precision, recall, F1 et la matrice.
     y_pred = model.predict(X_test)
 
-    # 2. Probabilité de la classe 1 : pour la ROC-AUC, jamais les classes prédites.
     positive_class_index = classes.index(1)
     y_probability = model.predict_proba(X_test)[:, positive_class_index]
 
-    # zero_division=0 donne un score nul si un ratio est impossible à calculer,
-    # par exemple la précision quand le modèle ne prédit aucun départ.
     metrics = {
         "accuracy": float(accuracy_score(y_test, y_pred)),
         "precision": float(precision_score(y_test, y_pred, pos_label=1, zero_division=0)),
@@ -62,15 +59,14 @@ def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> 
         columns=["Prédit No (0)", "Prédit Yes (1)"],
     )
 
-    print(f"\nÉvaluation finale sur {len(y_test)} clients du test :")
+    logger.info(f"Évaluation finale sur {len(y_test)} clients du test :")
     for name, value in metrics.items():
         if value is None:
-            print(f"{name}: non définie")
+            logger.info(f"{name}: non définie")
         else:
-            print(f"{name}: {value:.4f}")
-    print("\nMatrice de confusion :")
-    print(matrix_table.to_string())
-    print("\nLe modèle et le preprocessing n'ont pas été réentraînés sur le test.")
+            logger.info(f"{name}: {value:.4f}")
+    logger.info("Matrice de confusion :")
+    logger.info(matrix_table.to_string())
 
     return {
         "metrics": metrics,
