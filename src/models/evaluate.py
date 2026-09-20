@@ -1,8 +1,4 @@
-"""Évaluation d'un modèle déjà entraîné sur le jeu de test réservé.
 
-Ce fichier ne fait aucun fit. L'appel depuis train.py passe le Pipeline entraîné,
-X_test et y_test à evaluate_model.
-"""
 
 import warnings
 
@@ -20,12 +16,7 @@ from sklearn.utils.validation import check_is_fitted
 
 
 def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> dict:
-    """Affiche et retourne les métriques et la matrice de confusion.
 
-    La classe positive est 1 : le client quitte l'entreprise (Churn = Yes).
-    X_test doit déjà être préparé, comme dans train_model. Le Pipeline applique
-    son preprocessing appris sur le train, sans le réajuster sur le test.
-    """
     check_is_fitted(model)
     if X_test.empty or len(X_test) != len(y_test):
         raise ValueError("X_test et y_test doivent être non vides et de même longueur.")
@@ -54,7 +45,6 @@ def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> 
         "f1_score": float(f1_score(y_test, y_pred, pos_label=1, zero_division=0)),
     }
 
-    # La ROC-AUC nécessite au moins un exemple de chaque classe dans le test.
     if y_test.nunique() == 2:
         metrics["roc_auc"] = float(roc_auc_score(y_test, y_probability))
     else:
@@ -65,7 +55,6 @@ def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> 
             stacklevel=2,
         )
 
-    # Lignes = classes réelles, colonnes = classes prédites, dans l'ordre No, Yes.
     matrix = confusion_matrix(y_test, y_pred, labels=[0, 1])
     matrix_table = pd.DataFrame(
         matrix,
