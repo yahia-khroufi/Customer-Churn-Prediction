@@ -6,7 +6,6 @@ __pycache__/
 .vscode
 /models/*.joblib
 /mlruns/
-/artifacts/
 /logs/
 *.log
 .env
