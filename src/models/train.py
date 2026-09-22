@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 
 import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
@@ -150,6 +151,7 @@ def train_model(
     logger.info("Modèles retenus pour le réglage : %s", ", ".join(top_models))
     searches = {}
     tuned_results = []
+    search_trials = {}
 
     for name in top_models:
         logger.info("Recherche d'hyperparamètres pour : %s", name)
@@ -164,6 +166,10 @@ def train_model(
         )
         search.fit(X_train, y_train)
         searches[name] = search
+        search_trials[name] = [
+            {"params": params, "f1_cv": float(search.cv_results_["mean_test_f1"][i])}
+            for i, params in enumerate(search.cv_results_["params"])
+        ]
 
         # Les quatre métriques correspondent à la configuration gagnante en F1.
         best_index = search.best_index_
@@ -186,13 +192,23 @@ def train_model(
     )
 
     best_name = tuned_df.iloc[0]["modele"]
-    # refit="f1" a déjà ajusté ce pipeline sur l'ensemble du train.
     model = searches[best_name].best_estimator_
-    logger.info("Meilleur modèle final selon le F1 moyen en CV : %s", best_name)
-    logger.info("Meilleurs paramètres finaux : %s", searches[best_name].best_params_)
+    model.training_summary_ = {
+        "selected_model": best_name,
+        "selection_metric": "f1",
+        "best_params": searches[best_name].best_params_,
+        "baseline_results": results_df.to_dict(orient="records"),
+        "tuned_results": tuned_df.to_dict(orient="records"),
+        "search_trials": search_trials,
+        "random_state": RANDOM_STATE,
+        "cv_folds": CV_FOLDS,
+        "train_samples": len(X_train),
+        "test_samples": len(X_test),
+        "dataset_sha256": hashlib.sha256(Path(data_path).read_bytes()).hexdigest(),
+    }
+    logger.info("meilleur model on bason sur f1-score de cross vlue: %s", best_name)
+    logger.info("meilleurs parametres  finaux : %s", searches[best_name].best_params_)
     logger.info("Le meilleur pipeline a été réentraîné sur tout le train")
-    logger.info("Ces scores servent à la sélection ; l'évaluation finale reste à faire")
-    logger.info("Aucun modèle n'a été enregistré à cette étape")
 
     return model, X_test, y_test
 

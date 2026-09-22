@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#102e32">
+  <title>Churn Lab — Analyse client</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="Churn Lab, accueil"><span class="brand-icon">c.</span> churn<span class="brand-light">lab</span></a>
+    <div class="workspace-label">CUSTOMER INTELLIGENCE</div>
+    <nav aria-label="Navigation"><a class="nav-link active" href="#analyse"><span aria-hidden="true">◈</span> Analyse client</a><a class="nav-link" href="#modele"><span aria-hidden="true">▥</span> Le modèle</a><a class="nav-link" href="/docs" target="_blank" rel="noopener"><span aria-hidden="true">⌘</span> Documentation API <span class="external">↗</span></a></nav>
+    <div class="sidebar-note"><div class="mini-mark">ML</div><p>De la donnée<br>à la décision.</p><span>Projet Customer Churn<br>Classification · Télécom</span></div>
+    <div class="sidebar-footer"><span class="status-dot" id="side-dot"></span><span id="side-status">Connexion…</span></div>
+  </aside>
+  <main id="analyse">
+    <header class="topbar"><div>Workspace <span class="slash">/</span> <strong>Analyse client</strong></div><span class="env-badge">Démo interactive</span></header>
+    <section class="page-heading"><div><div class="eyebrow">ANTICIPER POUR MIEUX ACCOMPAGNER</div><h1>Comprendre le risque de départ.</h1><p>Renseignez un profil client et obtenez une estimation du churn.</p></div><div class="live-badge"><span class="status-dot" id="health-dot"></span><span id="health-status">Vérification du modèle</span></div></section>
+    <div class="layout">
+      <section class="panel form-panel" aria-labelledby="profile-title">
+        <div class="panel-heading"><div><span class="step-number">01</span><h2 id="profile-title">Profil du client</h2></div><button class="text-button" type="button" id="reset">Réinitialiser ↺</button></div>
+        <div class="examples"><span>Essayer un exemple</span><button type="button" data-example="new">Nouveau client</button><button type="button" data-example="loyal">Client fidèle</button></div>
+        <form id="customer-form">
+          <fieldset><legend><span>01</span> Informations client</legend><div class="fields" id="profile-fields"></div></fieldset>
+          <fieldset><legend><span>02</span> Contrat & facturation</legend><div class="fields" id="billing-fields"></div></fieldset>
+          <fieldset><legend><span>03</span> Services souscrits</legend><div class="fields" id="service-fields"></div></fieldset>
+          <div class="form-footer"><p>Le montant total peut rester vide : le pipeline traitera cette valeur manquante.</p><button type="submit" class="primary-button" id="submit" disabled>Analyser ce client <span aria-hidden="true">↗</span></button></div>
+          <div id="error-message" class="error-message" role="alert" hidden></div>
+        </form>
+      </section>
+      <aside class="results-column">
+        <section class="panel result-panel" aria-labelledby="result-title" aria-live="polite">
+          <div class="panel-heading"><div><span class="step-number">02</span><h2 id="result-title">Résultat de l’analyse</h2></div></div>
+          <div id="empty-state"><div class="empty-orbit"><span>↗</span></div><h3>Un profil. Un éclairage.</h3><p>Complétez le formulaire ou chargez un exemple pour lancer une prédiction.</p><div class="empty-tags"><span>19 caractéristiques</span><span>Pipeline entraîné</span></div></div>
+          <div id="result" hidden><div class="result-kicker">SCORE DE CHURN</div><div class="score-line"><span id="score">—</span><span class="score-unit">%</span></div><div class="risk-meter"><div id="risk-fill"></div><span title="Seuil de décision : 50 %"></span></div><div class="meter-labels"><span>0 %</span><span>Seuil : 50 %</span><span>100 %</span></div><div id="prediction-badge" class="prediction-badge"></div><p id="result-description"></p><div class="result-detail"><span>Modèle utilisé</span><strong id="result-model"></strong></div><div id="stale-notice" class="stale-notice" hidden>Le profil a changé. Relancez l’analyse pour actualiser ce résultat.</div><button type="button" id="download" class="secondary-button">Télécharger le résultat ↓</button></div>
+          <div class="model-note"><span aria-hidden="true">ⓘ</span><p>Ce score est une estimation du modèle, pas une certitude de départ. Il ne mesure pas l’effet d’une action commerciale.</p></div>
+        </section>
+        <section class="model-card" id="modele"><div class="eyebrow">LE MODÈLE EN BREF</div><h3 id="model-name">Chargement…</h3><p>Preprocessing et classification réunis dans un même pipeline.</p><div class="model-stats"><div><strong id="metric-recall">—</strong><span>Rappel · test</span></div><div><strong id="metric-f1">—</strong><span>F1-score · test</span></div></div><p class="model-footnote" id="metrics-caption">Les métriques disponibles proviennent de l’évaluation du modèle sauvegardé.</p></section>
+        <section class="how-it-works"><h3>Comment ça fonctionne ?</h3><ol><li>Les données du client sont validées.</li><li>Le pipeline applique ses transformations apprises.</li><li>Le modèle produit un score et une classe.</li></ol></section>
+      </aside>
+    </div>
+    <footer class="page-footer"><span>Churn Lab <span class="footer-dot">·</span> Customer Churn Prediction</span><span>Python · scikit-learn · FastAPI</span></footer>
+  </main>
+</body>
+</html>

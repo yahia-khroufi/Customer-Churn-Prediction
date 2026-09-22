@@ -97,6 +97,7 @@ def test_selection_uses_f1_without_rounding_and_cv_excludes_test(valid_data, tmp
             self.best_index_ = 0
             self.best_params_ = {"classifier__n_estimators": 10}
             self.cv_results_ = {
+                "params": [self.best_params_],
                 "mean_test_accuracy": [0.8],
                 "mean_test_precision": [0.7],
                 "mean_test_recall": [0.7],

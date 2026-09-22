@@ -65,10 +65,15 @@ def evaluate_model(model: Pipeline, X_test: pd.DataFrame, y_test: pd.Series) -> 
             logger.info(f"{name}: non définie")
         else:
             logger.info(f"{name}: {value:.4f}")
-    logger.info("Matrice de confusion :")
+    logger.info("Matrice de confusion \n:")
     logger.info(matrix_table.to_string())
 
     return {
         "metrics": metrics,
         "confusion_matrix": matrix.tolist(),
     }
+
+
+    
+
+

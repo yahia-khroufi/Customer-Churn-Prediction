@@ -4,4 +4,10 @@ __pycache__/
 .ipynb_checkpoints/
 .pytest_cache/
 .vscode
-
+/models/*.joblib
+/mlruns/
+/artifacts/
+/logs/
+*.log
+.env
+azure.local.ps1
