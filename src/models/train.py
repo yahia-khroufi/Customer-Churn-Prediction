@@ -22,8 +22,6 @@ RANDOM_STATE = 42
 TEST_SIZE = 0.20
 CV_FOLDS = 5
 
-# Les paramètres du classifier sont préfixés par son nom dans le Pipeline.
-# Chaque grille inclut aussi la configuration de départ pour pouvoir la conserver.
 PARAM_GRIDS = {
     "LogisticRegression": {
         "classifier__C": [0.01, 0.1, 1.0, 10.0],
@@ -146,7 +144,6 @@ def train_model(
         results_df.round(4).to_string(index=False),
     )
 
-    # Régler les deux meilleurs candidats sur les mêmes plis, sans toucher au test.
     top_models = results_df.head(2)["modele"].tolist()
     logger.info("Modèles retenus pour le réglage : %s", ", ".join(top_models))
     searches = {}
@@ -171,7 +168,6 @@ def train_model(
             for i, params in enumerate(search.cv_results_["params"])
         ]
 
-        # Les quatre métriques correspondent à la configuration gagnante en F1.
         best_index = search.best_index_
         tuned_results.append({
             "modele": name,

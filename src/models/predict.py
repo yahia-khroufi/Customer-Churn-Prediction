@@ -1,5 +1,3 @@
-"""Prédictions réutilisables par l'API et en ligne de commande."""
-
 import argparse
 import json
 import hashlib

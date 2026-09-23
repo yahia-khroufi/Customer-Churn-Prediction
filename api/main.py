@@ -1,5 +1,3 @@
-"""API et interface web : python -m uvicorn api.main:app --reload."""
-
 from contextlib import asynccontextmanager
 import logging
 import os
@@ -27,7 +25,6 @@ def create_app(model_path: str | Path | None = None) -> FastAPI:
             path = model_path or os.environ.get("MODEL_PATH") or DEFAULT_MODEL_PATH
             app.state.predictor = ChurnPredictor(path)
         except Exception:
-            # Le diagnostic détaillé reste dans les logs, pas dans la réponse publique.
             logger.exception("Impossible de charger le pipeline")
         yield
         app.state.predictor = None

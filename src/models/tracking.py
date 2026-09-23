@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 
 import pandas as pd
+import mlflow
 
 from src.data.preprocess import prepare_prediction_data
 from src.models.persistence import register_pipeline
@@ -13,7 +14,6 @@ PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 
 def track_experiment(model, evaluation=None, model_path=None) -> str:
-    import mlflow
 
     storage = PROJECT_ROOT / "mlruns"
     storage.mkdir(exist_ok=True)
@@ -54,3 +54,4 @@ def track_experiment(model, evaluation=None, model_path=None) -> str:
             if metadata.exists():
                 mlflow.log_artifact(str(metadata), artifact_path="export")
         return run.info.run_id
+

@@ -11,7 +11,6 @@ from src.data.preprocess import build_preprocessor, prepare_training_data
 from src.models.persistence import save_model_metadata, save_pipeline
 from src.models.predict import ChurnPredictor
 
-
 @pytest.fixture
 def api_data(valid_data, tmp_path):
     X, y = prepare_training_data(valid_data)
@@ -99,3 +98,4 @@ def test_model_metadata_matches_artifact(api_data):
 def test_predictor_requires_model_file(tmp_path):
     with pytest.raises(FileNotFoundError, match="Pipeline absent"):
         ChurnPredictor(tmp_path / "missing.joblib")
+

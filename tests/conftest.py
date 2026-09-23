@@ -1,12 +1,8 @@
-"""Petites données fictives partagées par les tests, sans lire churn.csv."""
-
 import pandas as pd
 import pytest
 
-
 @pytest.fixture
 def valid_data():
-    """Chaque test reçoit un nouveau DataFrame qu'il peut modifier."""
     customer = {
         "customerID": "CLIENT-0",
         "gender": "Female",
@@ -38,3 +34,6 @@ def valid_data():
     data["SeniorCitizen"] = [0, 0, 1, 0]
     data["Churn"] = ["No", "Yes", "No", "Yes"]
     return data
+
+    
+

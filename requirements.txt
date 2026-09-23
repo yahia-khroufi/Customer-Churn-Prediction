@@ -12,3 +12,4 @@ ipykernel==7.3.0
 pytest>=8,<10
 mlflow==3.16.1
 httpx==0.28.1
+

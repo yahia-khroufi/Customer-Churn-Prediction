@@ -11,7 +11,6 @@ from src.models.train import train_model
 
 @pytest.fixture(autouse=True)
 def small_parameter_grids(monkeypatch):
-    """Une petite grille suffit pour vérifier le fonctionnement de la recherche."""
     monkeypatch.setattr("src.models.train.PARAM_GRIDS", {
         "LogisticRegression": {"classifier__C": [0.1, 1.0]},
         "DecisionTreeClassifier": {"classifier__max_depth": [3, 5]},

@@ -1,4 +1,3 @@
-"""Entraînement, puis évaluation finale et sauvegarde avec --evaluate."""
 
 import argparse
 
