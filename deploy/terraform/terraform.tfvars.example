@@ -1,0 +1,10 @@
+subscription_id = "00000000-0000-0000-0000-000000000000"
+registry_name   = "churnmonnom2026"
+location        = "westeurope"
+
+image_tag = "latest"
+
+app_environment_variables = {
+  MODEL_PATH     = "/app/models/churn_pipeline.joblib"
+  OMP_NUM_THREADS = "1"
+}

@@ -3,8 +3,8 @@ import json
 import hashlib
 from pathlib import Path
 
-import joblib
 import pandas as pd
+import mlflow.sklearn as ml
 from sklearn.pipeline import Pipeline
 from sklearn.utils.validation import check_is_fitted
 
@@ -20,7 +20,7 @@ class ChurnPredictor:
             raise FileNotFoundError(
                 f"Pipeline absent : {self.model_path}. Exécuter python run_pipeline.py --evaluate."
             )
-        self.model = joblib.load(self.model_path)
+        self.model = ml.load_model(self.model_path)
         if not isinstance(self.model, Pipeline):
             raise ValueError("Le fichier doit contenir un Pipeline scikit-learn.")
         check_is_fitted(self.model)
