@@ -1,6 +1,6 @@
 {
   "model_name": "LogisticRegression",
-  "created_at": "2026-09-22T07:06:13.610227+00:00",
+  "created_at": "2026-09-23T16:10:43.605303+00:00",
   "model_sha256": "b9635d9d026c4c43bf1f016c9ec5a89960f726735840e800f48224c21216aa2d",
   "features": [
     "tenure",
