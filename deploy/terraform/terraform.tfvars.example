@@ -2,7 +2,8 @@ subscription_id = "00000000-0000-0000-0000-000000000000"
 registry_name   = "churnmonnom2026"
 location        = "westeurope"
 
-image_tag = "latest"
+image_tag   = "latest"
+build_image = true
 
 app_environment_variables = {
   MODEL_PATH     = "/app/models/churn_pipeline.joblib"

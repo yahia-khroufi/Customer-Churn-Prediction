@@ -55,6 +55,12 @@ variable "image_tag" {
   default     = "latest"
 }
 
+variable "build_image" {
+  description = "Build and push the customer-churn image in ACR during terraform apply."
+  type        = bool
+  default     = true
+}
+
 variable "container_cpu" {
   description = "Container CPU allocation in vCPU."
   type        = number
@@ -83,7 +89,7 @@ variable "app_environment_variables" {
   description = "Non-sensitive environment variables passed to the container."
   type        = map(string)
   default = {
-    MODEL_PATH     = "/app/models/churn_pipeline.joblib"
+    MODEL_PATH      = "/app/models/churn_pipeline.joblib"
     OMP_NUM_THREADS = "1"
   }
 }

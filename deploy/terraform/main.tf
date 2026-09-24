@@ -2,6 +2,23 @@ locals {
   image = var.container_image != "" ? var.container_image : "${azurerm_container_registry.main.login_server}/customer-churn:${var.image_tag}"
 }
 
+resource "terraform_data" "build_image" {
+  count = var.build_image && var.container_image == "" ? 1 : 0
+
+  triggers_replace = [
+    var.image_tag,
+    filesha256("${path.module}/../../Dockerfile"),
+    filesha256("${path.module}/../../requirements-runtime.txt"),
+  ]
+
+  provisioner "local-exec" {
+    working_dir = "${path.module}/../.."
+    command     = "az acr login --name ${azurerm_container_registry.main.name} && docker build --platform linux/amd64 --tag customer-churn:${var.image_tag} . && docker tag customer-churn:${var.image_tag} ${azurerm_container_registry.main.login_server}/customer-churn:${var.image_tag} && docker push ${azurerm_container_registry.main.login_server}/customer-churn:${var.image_tag}"
+  }
+
+  depends_on = [azurerm_container_registry.main]
+}
+
 resource "azurerm_resource_group" "main" {
   name     = var.resource_group_name
   location = var.location
@@ -83,6 +100,8 @@ resource "azurerm_container_app" "main" {
     }
   }
 
+
+
   template {
     min_replicas = var.min_replicas
     max_replicas = var.max_replicas
@@ -113,30 +132,30 @@ resource "azurerm_container_app" "main" {
       }
 
       startup_probe {
-        transport     = "HTTP"
-        port          = 8000
-        path          = "/health"
-        interval_seconds = 5
-        timeout         = 3
-        failure_count   = 30
+        transport               = "HTTP"
+        port                    = 8000
+        path                    = "/health"
+        interval_seconds        = 5
+        timeout                 = 3
+        failure_count_threshold = 30
       }
 
       readiness_probe {
-        transport        = "HTTP"
-        port              = 8000
-        path              = "/health"
-        interval_seconds  = 10
-        timeout            = 3
-        failure_count      = 3
+        transport               = "HTTP"
+        port                    = 8000
+        path                    = "/health"
+        interval_seconds        = 10
+        timeout                 = 3
+        failure_count_threshold = 3
       }
 
       liveness_probe {
-        transport        = "HTTP"
-        port              = 8000
-        path              = "/"
-        interval_seconds  = 30
-        timeout            = 3
-        failure_count      = 3
+        transport               = "HTTP"
+        port                    = 8000
+        path                    = "/"
+        interval_seconds        = 30
+        timeout                 = 3
+        failure_count_threshold = 3
       }
     }
 
@@ -145,4 +164,9 @@ resource "azurerm_container_app" "main" {
       concurrent_requests = 10
     }
   }
+
+  depends_on = [
+    azurerm_role_assignment.acr_pull,
+    terraform_data.build_image,
+  ]
 }
