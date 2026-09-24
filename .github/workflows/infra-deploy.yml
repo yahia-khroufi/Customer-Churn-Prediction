@@ -1,0 +1,57 @@
+name: Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: GitHub environment to provision
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+          - production
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  provision:
+    name: Provision infrastructure
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Azure login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform init
+        working-directory: deploy/terraform
+        run: >-
+          terraform init -input=false
+          -backend-config="resource_group_name=${{ vars.AZURE_TFSTATE_RESOURCE_GROUP }}"
+          -backend-config="storage_account_name=${{ vars.AZURE_TFSTATE_STORAGE_ACCOUNT }}"
+          -backend-config="container_name=${{ vars.AZURE_TFSTATE_CONTAINER }}"
+          -backend-config="key=${{ vars.AZURE_TFSTATE_KEY }}"
+
+      - name: Terraform apply
+        working-directory: deploy/terraform
+        env:
+          TF_VAR_subscription_id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          TF_VAR_location: ${{ vars.AZURE_LOCATION }}
+          TF_VAR_resource_group_name: ${{ vars.AZURE_RESOURCE_GROUP }}
+          TF_VAR_registry_name: ${{ vars.AZURE_REGISTRY_NAME }}
+          TF_VAR_environment_name: ${{ vars.AZURE_CONTAINER_ENVIRONMENT }}
+          TF_VAR_app_name: ${{ vars.AZURE_CONTAINER_APP }}
+          TF_VAR_image_tag: infrastructure-${{ github.run_number }}
+          TF_VAR_build_image: "true"
+        run: terraform apply -auto-approve -input=false
