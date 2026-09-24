@@ -39,7 +39,7 @@ jobs:
           -backend-config="resource_group_name=${{ vars.AZURE_TFSTATE_RESOURCE_GROUP }}"
           -backend-config="storage_account_name=${{ vars.AZURE_TFSTATE_STORAGE_ACCOUNT }}"
           -backend-config="container_name=${{ vars.AZURE_TFSTATE_CONTAINER }}"
-          -backend-config="key=${{ vars.AZURE_TFSTATE_KEY }}"
+          -backend-config="key=customer-churn-dev.tfstate"
 
       - name: Deploy dev
         working-directory: deploy/terraform
@@ -88,7 +88,7 @@ jobs:
           -backend-config="resource_group_name=${{ vars.AZURE_TFSTATE_RESOURCE_GROUP }}"
           -backend-config="storage_account_name=${{ vars.AZURE_TFSTATE_STORAGE_ACCOUNT }}"
           -backend-config="container_name=${{ vars.AZURE_TFSTATE_CONTAINER }}"
-          -backend-config="key=${{ vars.AZURE_TFSTATE_KEY }}"
+          -backend-config="key=customer-churn-staging.tfstate"
           && terraform apply -auto-approve -input=false
 
   deploy-production:
@@ -125,5 +125,5 @@ jobs:
           -backend-config="resource_group_name=${{ vars.AZURE_TFSTATE_RESOURCE_GROUP }}"
           -backend-config="storage_account_name=${{ vars.AZURE_TFSTATE_STORAGE_ACCOUNT }}"
           -backend-config="container_name=${{ vars.AZURE_TFSTATE_CONTAINER }}"
-          -backend-config="key=${{ vars.AZURE_TFSTATE_KEY }}"
+          -backend-config="key=customer-churn-production.tfstate"
           && terraform apply -auto-approve -input=false
