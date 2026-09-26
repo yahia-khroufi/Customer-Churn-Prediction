@@ -2,7 +2,7 @@
 
 La pipeline utilise trois workflows :
 
-- `CI` exécute les tests Python sur les pull requests et les push vers `main`.
+- `CI` exécute les tests Python et valide Terraform sur les pull requests et les push vers `main`.
 - `CD` déploie séquentiellement vers `dev`, `staging`, puis `production`.
 - `Infrastructure` provisionne manuellement Terraform pour un environnement choisi.
 
@@ -19,6 +19,7 @@ Depuis WSL ou Azure Cloud Shell, définir les variables :
 SUBSCRIPTION_ID="35726a57-2e04-4b2d-afb2-d8373578a5db"
 PIPELINE_RG="rg-customer-churn-github"
 IDENTITY_NAME="id-customer-churn-github"
+az account set --subscription "$SUBSCRIPTION_ID"
 ```
 
 Créer le groupe et l'identité :
@@ -38,13 +39,21 @@ APP_RG_ID=$(az group show --name rg-customer-churn --query id -o tsv)
 az role assignment create --assignee-object-id "$PRINCIPAL_ID" \
   --assignee-principal-type ServicePrincipal --role Contributor --scope "$APP_RG_ID"
 
+# Terraform creates an AcrPull role assignment for the Container App identity.
+az role assignment create --assignee-object-id "$PRINCIPAL_ID" \
+  --assignee-principal-type ServicePrincipal \
+  --role "Role Based Access Control Administrator" --scope "$APP_RG_ID"
+
 ACR_ID=$(az acr show --name churnyahia2026 --resource-group rg-customer-churn --query id -o tsv)
 az role assignment create --assignee-object-id "$PRINCIPAL_ID" \
   --assignee-principal-type ServicePrincipal --role AcrPush --scope "$ACR_ID"
 ```
 
 Le rôle `Contributor` couvre le provisionnement Terraform et le déploiement de
-la Container App. L'image est poussée par le pipeline via `az acr login`.
+la Container App, mais ne peut pas créer des attributions RBAC. Terraform crée
+l'attribution `AcrPull`; l'identité du pipeline a donc aussi besoin du rôle
+`Role Based Access Control Administrator` sur le groupe applicatif. L'image est
+poussée par le pipeline via `az acr login`.
 
 ## 2. Créer le backend Terraform distant
 
@@ -96,12 +105,13 @@ for ENV in dev staging production; do
     --identity-name "$IDENTITY_NAME" \
     --resource-group "$PIPELINE_RG" \
     --issuer https://token.actions.githubusercontent.com \
-    --subject "repo:OWNER/REPOSITORY:environment:$ENV" \
+    --subject "repo:yahia-khroufi/Customer-Churn-Prediction:environment:$ENV" \
     --audiences api://AzureADTokenExchange
 done
 ```
 
-Remplacer `OWNER/REPOSITORY` par le dépôt GitHub réel.
+Les sujets ci-dessus sont configurés pour le dépôt
+`yahia-khroufi/Customer-Churn-Prediction`.
 
 ## 4. Créer les environnements GitHub
 
@@ -133,7 +143,17 @@ Dans chaque environnement, ajouter ces **variables** :
 
 Pour de vrais environnements séparés, mettre un groupe, un ACR, un
 Container Apps Environment et une Container App différents dans chaque
-environnement GitHub. Utiliser aussi une clé d'état différente par environnement.
+environnement GitHub. Utiliser aussi une clé d'état différente par environnement
+dans `AZURE_TFSTATE_KEY`; les trois jobs CD utilisent cette variable pour choisir
+le blob Terraform de l'environnement.
+
+Valeurs recommandées pour cette variable :
+
+| Environnement | `AZURE_TFSTATE_KEY` |
+|---|---|
+| `dev` | `customer-churn-dev.tfstate` |
+| `staging` | `customer-churn-staging.tfstate` |
+| `production` | `customer-churn-production.tfstate` |
 
 ## 5. Premier lancement
 
