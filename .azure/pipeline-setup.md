@@ -139,21 +139,37 @@ Dans chaque environnement, ajouter ces **variables** :
 | `AZURE_TFSTATE_RESOURCE_GROUP` | `rg-customer-churn-github` |
 | `AZURE_TFSTATE_STORAGE_ACCOUNT` | `stcustomerchurntf2026` |
 | `AZURE_TFSTATE_CONTAINER` | `tfstate` |
-| `AZURE_TFSTATE_KEY` | `customer-churn-dev.tfstate` |
+| `AZURE_TFSTATE_KEY` (facultative) | `customer-churn-dev.tfstate` |
 
 Pour de vrais environnements séparés, mettre un groupe, un ACR, un
 Container Apps Environment et une Container App différents dans chaque
-environnement GitHub. Utiliser aussi une clé d'état différente par environnement
-dans `AZURE_TFSTATE_KEY`; les trois jobs CD utilisent cette variable pour choisir
-le blob Terraform de l'environnement.
+environnement GitHub. Les workflows `CD` et `Infrastructure` utilisent la même
+clé d'état pour un environnement donné. Si `AZURE_TFSTATE_KEY` est absente ou
+vide, ils choisissent automatiquement la valeur par défaut ci-dessous. Pour
+un état existant dont le nom est différent, définir cette variable dans
+l'environnement GitHub concerné avec le nom exact du blob existant.
 
-Valeurs recommandées pour cette variable :
+Valeurs par défaut :
 
 | Environnement | `AZURE_TFSTATE_KEY` |
 |---|---|
 | `dev` | `customer-churn-dev.tfstate` |
 | `staging` | `customer-churn-staging.tfstate` |
 | `production` | `customer-churn-production.tfstate` |
+
+Si une ancienne version du workflow échoue avec `blobName cannot be an empty
+string` et affiche `-backend-config="key="`, renseigner la variable pour pouvoir
+relancer cette exécution sans pousser de nouveau code :
+
+```bash
+gh variable set AZURE_TFSTATE_KEY \
+  --repo yahia-khroufi/Customer-Churn-Prediction \
+  --env dev --body "customer-churn-dev.tfstate"
+```
+
+Cette valeur correspond à la clé utilisée dans l'exemple de migration ci-dessus.
+Si l'état a été migré sous un autre nom, utiliser ce nom. Relancer ensuite le
+job échoué depuis GitHub Actions.
 
 ## 5. Premier lancement
 
