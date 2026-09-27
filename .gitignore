@@ -6,6 +6,7 @@ __pycache__/
 .vscode
 /models/*.joblib
 /mlruns/
+/mlflow.db
 /logs/
 *.log
 azure.local.ps1
@@ -15,7 +16,6 @@ deploy/terraform/.terraform/
 deploy/terraform/terraform.tfvars
 deploy/terraform/*.tfplan
 */terraform.tfvars
-.vscode
-.pytest*
-mlflow.db
+/.vscode
+/.pytest*
 
