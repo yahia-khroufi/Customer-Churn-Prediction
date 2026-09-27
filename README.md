@@ -14,7 +14,7 @@ Le projet entraîne plusieurs classifieurs sur les données client, conserve le 
 
 Les trois captures sont intégrées ci-dessous. Cliquez sur une image pour l'ouvrir en taille réelle.
 
-| Formulaire · ordinateur | Résultat · ordinateur | Résultat · mobile |
+| Formulaire ordinateur | Résultat ordinateur | Résultat mobile |
 | :---: | :---: | :---: |
 | <a href="artifacts/screenshots/desktop-form.png"><img src="artifacts/screenshots/desktop-form.png" alt="Formulaire d'analyse client sur ordinateur" width="360"></a> | <a href="artifacts/screenshots/desktop-result.png"><img src="artifacts/screenshots/desktop-result.png" alt="Résultat de prédiction sur ordinateur" width="360"></a> | <a href="artifacts/screenshots/mobile-result.png"><img src="artifacts/screenshots/mobile-result.png" alt="Résultat de prédiction sur mobile" width="64"></a> |
 
