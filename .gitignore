@@ -17,4 +17,5 @@ deploy/terraform/*.tfplan
 */terraform.tfvars
 .vscode
 .pytest*
+.azure/
 
