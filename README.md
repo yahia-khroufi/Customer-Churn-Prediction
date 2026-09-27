@@ -1,16 +1,24 @@
-# Customer Churn Prediction
+<h1 align="center">Customer Churn Prediction</h1>
 
-Application de prédiction du départ de clients télécoms. Un pipeline de machine learning transforme les données client, entraîne plusieurs modèles et expose le modèle retenu avec **FastAPI**. Une interface web permet de saisir un profil, de consulter sa probabilité de churn et de télécharger le résultat.
+<p align="center">Prédiction du départ de clients télécoms avec scikit-learn, FastAPI et une interface web.</p>
 
-![Résultat de l'analyse sur ordinateur](artifacts/screenshots/desktop-result.png)
+<p align="center">
+  <a href="#démarrage-local">Démarrer</a> ·
+  <a href="#api-et-prédiction">API</a> ·
+  <a href="#cicd-et-infrastructure">CI/CD</a>
+</p>
 
-## Aperçu
+Le projet entraîne plusieurs classifieurs sur les données client, conserve le meilleur pipeline selon le F1-score et expose ses prédictions via une API. L'interface permet de saisir un profil, de consulter sa probabilité de churn et de télécharger le résultat.
 
-| Formulaire sur ordinateur | Résultat sur mobile |
-| --- | --- |
-| <img src="artifacts/screenshots/desktop-form.png" alt="Formulaire d'analyse client sur ordinateur" width="600"> | <img src="artifacts/screenshots/mobile-result.png" alt="Résultat de prédiction sur mobile" width="240"> |
+## Interface
 
-L'interface propose deux profils d'exemple, vérifie la disponibilité du modèle et présente la classe prédite avec un score de probabilité. Le score est une estimation statistique, pas une certitude concernant un client.
+Les trois captures sont intégrées ci-dessous. Cliquez sur une image pour l'ouvrir en taille réelle.
+
+| Formulaire · ordinateur | Résultat · ordinateur | Résultat · mobile |
+| :---: | :---: | :---: |
+| <a href="artifacts/screenshots/desktop-form.png"><img src="artifacts/screenshots/desktop-form.png" alt="Formulaire d'analyse client sur ordinateur" width="360"></a> | <a href="artifacts/screenshots/desktop-result.png"><img src="artifacts/screenshots/desktop-result.png" alt="Résultat de prédiction sur ordinateur" width="360"></a> | <a href="artifacts/screenshots/mobile-result.png"><img src="artifacts/screenshots/mobile-result.png" alt="Résultat de prédiction sur mobile" width="64"></a> |
+
+L'interface propose deux profils d'exemple, vérifie la disponibilité du modèle et affiche la classe prédite avec un score de probabilité. Ce score est une estimation statistique, pas une certitude concernant un client.
 
 ## Fonctionnement
 
