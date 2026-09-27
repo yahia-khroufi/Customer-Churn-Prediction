@@ -16,3 +16,5 @@ deploy/terraform/terraform.tfvars
 deploy/terraform/*.tfplan
 */terraform.tfvars
 .vscode
+.pytest*
+
