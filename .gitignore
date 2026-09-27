@@ -18,4 +18,6 @@ deploy/terraform/*.tfplan
 .vscode
 .pytest*
 .azure/
+mlflow.db
+mlruns/
 
