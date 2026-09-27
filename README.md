@@ -6,37 +6,6 @@
 
 Application de prédiction du churn télécom construite avec **Python**, **scikit-learn**, **FastAPI** et une interface web responsive.
 
-[![CI](https://github.com/yahia-khroufi/Customer-Churn-Prediction/actions/workflows/ci.yml/badge.svg)](https://github.com/yahia-khroufi/Customer-Churn-Prediction/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/API-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![Azure](https://img.shields.io/badge/Cloud-Microsoft%20Azure-0078D4?logo=microsoftazure&logoColor=white)](https://azure.microsoft.com/)
-
-</div>
-
-## À propos
-
-Ce projet entraîne plusieurs classifieurs sur des données de clients télécoms, sélectionne le meilleur pipeline selon le **F1-score**, puis expose la prédiction via une API REST. L’interface permet de renseigner un profil client, de consulter la probabilité de churn et de télécharger le résultat.
-
-### Points clés
-
-- validation des **19 caractéristiques** client avant prédiction ;
-- comparaison de quatre modèles : régression logistique, arbre de décision, forêt aléatoire et XGBoost ;
-- prétraitement numérique et catégoriel encapsulé dans un pipeline scikit-learn ;
-- API documentée automatiquement avec OpenAPI ;
-- interface responsive pour ordinateur et mobile ;
-- déploiement conteneurisé sur Azure Container Apps avec Terraform et GitHub Actions.
-
-## Sommaire
-
-- [Aperçu de l’application](#aperçu-de-lapplication)
-- [Résultats du modèle](#résultats-du-modèle)
-- [Fonctionnement](#fonctionnement)
-- [Démarrage local](#démarrage-local)
-- [API et prédiction](#api-et-prédiction)
-- [CI/CD et infrastructure Azure](#cicd-et-infrastructure-azure)
-- [Organisation du dépôt](#organisation-du-dépôt)
-- [Limites](#limites)
-
 ## Aperçu de l’application
 
 L’interface est conçue autour d’un parcours simple : renseigner un profil, lancer l’analyse, puis interpréter le score avec le contexte du modèle. Chaque capture peut être ouverte en taille réelle.
@@ -188,25 +157,6 @@ L’API refuse les combinaisons incohérentes de services téléphoniques ou Int
 ## CI/CD et infrastructure Azure
 
 Le déploiement utilise **GitHub Actions**, l’authentification Azure **OIDC**, **Terraform**, **Azure Container Registry** et **Azure Container Apps**.
-
-### Architecture de déploiement
-
-```text
-Push sur main
-     │
-     ▼
-CI : tests Python + validation Terraform
-     │
-     ▼
-CD : build de l’image + push vers ACR
-     │
-     ▼
-Azure Container Apps
-     │
-     ├── dev
-     ├── staging
-     └── production
-```
 
 ### Ressources Azure
 
